@@ -1,3 +1,5 @@
+// src/obras-empreendimentos/obras-empreendimentos.module.ts
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ObrasEmpreendimentosService } from './obras-empreendimentos.service';

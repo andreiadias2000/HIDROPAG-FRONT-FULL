@@ -2,6 +2,8 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppDataSource } from './data-source'; 
+
+// Importação dos Módulos
 import { FiliaisModule } from './filiais/filiais.module';
 import { UsuariosModule } from './usuarios/usuarios.module'; 
 import { NotasFiscaisModule } from './notas-fiscais/notas-fiscais.module';
@@ -12,7 +14,10 @@ import { TokenMiddleware } from './common/middlewares/token.middleware';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(AppDataSource.options),
+    // Puxando as configurações do data-source
+    TypeOrmModule.forRoot(AppDataSource.options), 
+    
+    // Lista de todos os módulos ativos no sistema
     FiliaisModule,
     UsuariosModule,
     NotasFiscaisModule,

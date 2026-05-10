@@ -5,6 +5,7 @@ import { ApiBody } from '@nestjs/swagger';
 
 @Controller('APROVACOES') // Rota: http://localhost:3000/APROVACOES
 export class AprovaçoesController {
+  
   constructor(private readonly aprovaçoesService: AprovaçoesService) {}
 
   @Post()

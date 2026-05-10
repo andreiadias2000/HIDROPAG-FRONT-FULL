@@ -1,3 +1,4 @@
+//filiais.entity.ts
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Obras } from "../../obras-empreendimentos/entities/obras-empreendimento.entity";
 import { Usuarios } from "../../usuarios/entities/usuario.entity";

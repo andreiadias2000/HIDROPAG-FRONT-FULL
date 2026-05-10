@@ -9,6 +9,7 @@ import type { Response } from 'express';
 @ApiTags('NOTAS') // Organiza no Swagger
 @Controller('NOTAS')
 export class NotasFiscaisController {
+  
   constructor(private readonly notasFiscaisService: NotasFiscaisService) {}
 
   @Post()
@@ -91,6 +92,7 @@ async baixarPdf(@Param('id') id: string, @Res({ passthrough: true }) res: Respon
     return await this.notasFiscaisService.listar();
   }
 
+  // Recebe o ID como string
   @Get(':id')
   async buscarUma(@Param('id') id: string) {
     return await this.notasFiscaisService.buscarPorId(id);
@@ -101,6 +103,7 @@ async baixarPdf(@Param('id') id: string, @Res({ passthrough: true }) res: Respon
     return await this.notasFiscaisService.alterar(id, nota);
   }
 
+  // Recebe o ID como string
   @Delete(':id')
   async remover(@Param('id') id: string) {
     return await this.notasFiscaisService.excluir(id);

@@ -1,3 +1,5 @@
+//notas-fiscais,entity.ts
+
 import { Column, Entity, PrimaryGeneratedColumn,ManyToOne,OneToMany } from "typeorm";
 import { APROVACOES } from "../../aprovaçoes/entities/aprovaçoe.entity";
 import { Obras } from "../../obras-empreendimentos/entities/obras-empreendimento.entity";
@@ -6,7 +8,7 @@ import { ApiHideProperty, ApiProperty } from "@nestjs/swagger";
 @Entity('NOTAS')
 export class Notas {
     @PrimaryGeneratedColumn('uuid')
-    id?: number;
+    id?: string;
 
     @Column()
     @ApiProperty({ example: 1010 })
@@ -47,3 +49,4 @@ export class Notas {
     aprovacoes?: APROVACOES[];
 
 }
+
