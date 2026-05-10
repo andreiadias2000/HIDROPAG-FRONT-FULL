@@ -10,5 +10,6 @@ import { HashService } from '../common/middlewares/hash.service';
   imports: [TypeOrmModule.forFeature([Usuarios])], // Permite o uso do Repository[cite: 5]
   controllers: [UsuariosController],
   providers: [UsuariosService, LoginService,HashService],
+  exports: [LoginService],
 })
 export class UsuariosModule {}

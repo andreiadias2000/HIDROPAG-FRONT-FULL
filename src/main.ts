@@ -5,16 +5,26 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuração do DocumentBuilder
   const config = new DocumentBuilder()
-    .setTitle('Sistema de Engenharia Clínica e Obras')
-    .setDescription('API para gestão de notas fiscais, filiais e usuários')
+    .setTitle('Hidropag API')
+    .setDescription('Sistema de Gestão de Obras e Notas - Senac RS')
     .setVersion('1.0')
-    .addBearerAuth() // ESSENCIAL: Adiciona o campo para colocar o Token JWT
+    // AQUI ESTÁ O SEGREDO DO CADEADO:
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Insira o token JWT que você recebeu no login',
+        in: 'header',
+      },
+      'token-acesso', // Este nome deve ser igual ao que você usará nos Controllers
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // A rota será http://localhost:3000/api
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
 }

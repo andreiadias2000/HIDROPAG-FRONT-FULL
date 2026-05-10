@@ -1,24 +1,35 @@
 import { NextFunction, Request, Response } from "express";
-import { LoginService } from "../../usuarios/login.service"; // 1. Certifique-se de importar o LoginService
+import { LoginService } from "../../usuarios/login.service";
 
 export class TokenMiddleware {
-    // 2. Mude de UsuariosService para LoginService aqui no construtor
     constructor (private service: LoginService) {}
 
     verificarAcesso = async (req: Request, res: Response, next: NextFunction) => {
-        let token = req.get("Authorization");
-        if(token) {
+        const authHeader = req.get("Authorization");
+
+        if (authHeader) {
             try {
-                // 3. Agora o TypeScript vai reconhecer o método!
-                await this.service.validarToken(token);
+                // O header vem como "Bearer <token>"
+                // Dividimos a string pelo espaço e pegamos a segunda parte [1]
+                const partes = authHeader.split(' ');
+                
+                if (partes.length !== 2) {
+                    return res.status(401).json({ erro: "Formato do token inválido" });
+                }
+
+                const tokenLimpo = partes[1];
+
+                // Agora sim, validamos apenas o código do token
+                await this.service.validarToken(tokenLimpo);
                 next();
             }
-            catch(err: any) {
-                res.status(err.id || 401).json({erro: err.msg});
+            catch (err: any) {
+                // Se o JWT estiver expirado ou a SECRET estiver errada no .env
+                res.status(401).json({ erro: "Token inválido ou expirado" });
             }
         } 
         else {
-            res.status(401).json({error: "Nenhum Token informado!"});    
+            res.status(401).json({ erro: "Nenhum Token informado!" });    
         }       
     }
 }

@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Usuarios } from "./entities/usuario.entity"; 
 import * as jwt from "jsonwebtoken";
+import { HashService } from "../common/middlewares/hash.service";
 
 // const SECRET = "Sen@c2026";
 
@@ -60,29 +61,33 @@ import * as jwt from "jsonwebtoken";
 export class LoginService {
     constructor(
         @InjectRepository(Usuarios)
-        private readonly repository: Repository<Usuarios>
+        private readonly repository: Repository<Usuarios>,
+        private readonly hashService: HashService // Injete o HashService aqui
     ) {}
 
     async verificarLogin(email: string, senha: string): Promise<string> {
-        // Busca direto da variável de ambiente
-        const SECRET = process.env.JTW_SENHA;
+    const SECRET = process.env.JTW_SENHA;
+    const usuario = await this.repository.findOneBy({ email: email });
 
-        const usuario = await this.repository.findOneBy({ email: email });
-
-        if (usuario && usuario.senha === senha) {
-            const token = jwt.sign(
-                {
-                    usuarioId: usuario.id,
-                    usuarioEmail: usuario.email
-                }, 
-                SECRET as string, // Usamos 'as string' para o TS não reclamar
-                { expiresIn: '1h' }
-            );
-            
-            return token;
-        }
+    // 1. Verificamos se o usuário existe E se ele tem uma senha gravada no banco
+    if (!usuario || !usuario.senha) {
         throw { id: 401, msg: "Usuario ou senha invalidos" };
     }
+
+    // 2. Agora o TS sabe que 'usuario.senha' é uma string garantida
+    const senhaValida = await this.hashService.comparar(senha, usuario.senha);
+
+    if (senhaValida) {
+        const token = jwt.sign(
+            { usuarioId: usuario.id, usuarioEmail: usuario.email }, 
+            SECRET as string, 
+            { expiresIn: '1h' }
+        );
+        return token;
+    }
+
+    throw { id: 401, msg: "Usuario ou senha invalidos" };
+}
 
     async validarToken(token: string): Promise<void> {
         try {
