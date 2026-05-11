@@ -23,8 +23,8 @@ export class UsuariosController {
     schema: {
       type: 'object',
       properties: {
-        email: { type: 'string', example: 'ivan@teste.com' },
-        senha: { type: 'string', example: '123456' }
+        email: { type: 'string', example: 'admin@hidropag.com' },
+        senha: { type: 'string', example: 'Admin#2026' }
       },
       required: ['email', 'senha']
     }
