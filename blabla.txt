@@ -8,36 +8,25 @@ git pull upstream main
 git push upstream main
 
 
-
+baixar 
 git checkout main
 git pull upstream main
 
-====================================================================
-GUIA DE SALVAMENTO: COMO RESOLVER CONFLITOS NO GIT (MERGE CONFLICT)
-====================================================================
+branch ivan
 
-Quando acontece?
-Quando eu e o ivan alteramos as mesmas linhas do mesmo arquivo e tentamos juntar tudo na branch principal (main). O terminal dá o erro: "CONFLICT (content): Merge conflict... Automatic merge failed".
 
-COMO RESOLVER NO VS CODE:
+comando para instalar todas as dependencias 
 
-Passo 1: Identificar os arquivos
-Olhar na barra lateral do VS Code. Os arquivos em conflito estarão marcados com a letra "C". Clicar neles para abrir.
+npm install @nestjs/typeorm typeorm pg @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt @nestjs/config jsonwebtoken multer dotenv reflect-metadata && npm install -D @types/multer @types/jsonwebtoken @types/passport-jwt @types/bcrypt
 
-Passo 2: Escolher qual código manter
-O VS Code vai mostrar os códigos conflitantes com opções coloridas acima deles. Clicar em uma das opções:
-- Accept Current Change (Mantém o MEU código)
-- Accept Incoming Change (Mantém o código do COLEGA)
-- Accept Both Changes (Mantém os DOIS códigos - ideal para arquivos como data-source.ts, onde depois é só limpar as linhas repetidas manualmente).
+npm install --save @nestjs/swagger
 
-Passo 3: Salvar
-Dar Ctrl + S em todos os arquivos que foram arrumados.
+senha hash
+npm install bcrypt
+npm install -D @types/bcrypt
 
-Passo 4: Finalizar no Terminal
-Rodar os comandos abaixo, um por vez, para avisar o Git que a paz foi restaurada e mandar para a nuvem:
+arrumar usurios login
 
-git add .
-git commit -m "fix: resolvendo conflitos de merge"
-git push origin main
-
-======
+add hash e email unico.
+blablabla
+vamos ver se vai agora.

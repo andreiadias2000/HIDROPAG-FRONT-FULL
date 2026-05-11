@@ -1,5 +1,10 @@
 import { DataSource } from "typeorm";
 import * as dotenv from 'dotenv';
+import { Filiais } from "./filiais/entities/filiais.entity";
+import { Usuarios } from "./usuarios/entities/usuario.entity";
+import { Obras } from "./obras-empreendimentos/entities/obras-empreendimento.entity";
+import { Notas } from "./notas-fiscais/entities/notas-fiscais.entity";
+import { APROVACOES } from "./aprovaçoes/entities/aprovaçoe.entity";
 
 dotenv.config();
 
@@ -22,7 +27,7 @@ export const AppDataSource = new DataSource({
   synchronize: true, // Cria as tabelas automaticamente
   //dropSchema: true,  // ATENÇÃO: Isso apaga TODAS as tabelas toda vez que o servidor reinicia
   logging: true,
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  entities: [Filiais, Usuarios, Obras, Notas, APROVACOES],
   ssl: {
     rejectUnauthorized: false,
   },

@@ -1,34 +1,33 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
 import { FiliaisService } from './filiais.service';
-import { CreateFiliaiDto } from './dto/create-filiai.dto';
-import { UpdateFiliaiDto } from './dto/update-filiai.dto';
+import { Filiais } from './entities/filiais.entity';
 
-@Controller('filiais')
+@Controller('FILIAIS')
 export class FiliaisController {
   constructor(private readonly filiaisService: FiliaisService) {}
 
   @Post()
-  create(@Body() createFiliaiDto: CreateFiliaiDto) {
-    return this.filiaisService.create(createFiliaiDto);
+  async criar(@Body() dados: Filiais) {
+    return await this.filiaisService.inserir(dados);
   }
 
   @Get()
-  findAll() {
-    return this.filiaisService.findAll();
+  async buscarTodas() {
+    return await this.filiaisService.listar();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.filiaisService.findOne(+id);
+  async buscarUma(@Param('id') id: string) {
+    return await this.filiaisService.buscarPorId(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFiliaiDto: UpdateFiliaiDto) {
-    return this.filiaisService.update(+id, updateFiliaiDto);
+  @Put(':id')
+  async atualizar(@Param('id') id: string, @Body() dados: Partial<Filiais>) {
+    return await this.filiaisService.alterar(id, dados);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.filiaisService.remove(+id);
+  async remover(@Param('id') id: string) {
+    return await this.filiaisService.excluir(id);
   }
 }

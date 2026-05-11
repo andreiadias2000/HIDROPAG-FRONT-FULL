@@ -2,24 +2,28 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Obras } from "../../obras-empreendimentos/entities/obras-empreendimento.entity";
 import { Usuarios } from "../../usuarios/entities/usuario.entity";
+import { ApiProperty } from "@nestjs/swagger";
 
 @Entity('FILIAIS')
-export class Filiais{
-    @PrimaryGeneratedColumn('uuid')
-    id?: number; 
+export class Filiais {
+    @PrimaryGeneratedColumn("uuid")
+    id?: string;
 
     @Column()
-    nome?: string
+    @ApiProperty({ example: 'Filial Porto Alegre', description: 'Nome da unidade' })
+    nome?: string;
 
-    @Column()
-    cidade?: string
-
-    // Relacionamento: Uma filial pode ter muitas obras
-    @OneToMany(() => Obras, (obra) => obra.filiais)
+    @Column({ nullable: true })
+    @ApiProperty({ example: 'Porto Alegre', description: 'Cidade onde a filial está alocada' })
+    cidade?: string;
+    
+    // CORREÇÃO: O campo em Obras chama-se 'filial' (singular)
+    
+    @OneToMany(() => Obras, (obra) => obra.filial) // Ajustado para bater com a classe Obras[cite: 9, 13]
     obras?: Obras[];
 
-    // Relacionamento: Uma filial pode ter muitos usuários
+   
     @OneToMany(() => Usuarios, (usuario) => usuario.filial)
     usuarios?: Usuarios[];
-
 }
+

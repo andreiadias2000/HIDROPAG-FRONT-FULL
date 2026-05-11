@@ -1,30 +1,16 @@
-// import { Module } from '@nestjs/common';
-// import { AppController } from './app.controller';
-// import { AppService } from './app.service';
-// import { UsuariosModule } from './usuarios/usuarios.module';
-// import { FiliaisModule } from './filiais/filiais.module';
-// import { ObrasEmpreendimentosModule } from './obras-empreendimentos/obras-empreendimentos.module';
-// import { NotasFiscaisModule } from './notas-fiscais/notas-fiscais.module';
-// import { AprovaçoesModule } from './aprovaçoes/aprovaçoes.module';
-
-// @Module({
-//   imports: [UsuariosModule, FiliaisModule, ObrasEmpreendimentosModule, NotasFiscaisModule, AprovaçoesModule],
-//   controllers: [AppController],
-//   providers: [AppService],
-// })
-// export class AppModule {}
-
-// src/app.module.ts
-import { Module } from '@nestjs/common';
+//app.module
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppDataSource } from './data-source'; 
 
 // Importação dos Módulos
 import { FiliaisModule } from './filiais/filiais.module';
 import { UsuariosModule } from './usuarios/usuarios.module'; 
-import { AprovaçoesModule } from './aprovaçoes/aprovaçoes.module';
 import { NotasFiscaisModule } from './notas-fiscais/notas-fiscais.module';
+import { AprovaçoesModule } from './aprovaçoes/aprovaçoes.module';
 import { ObrasEmpreendimentosModule } from './obras-empreendimentos/obras-empreendimentos.module';
+import { LoginService } from './usuarios/login.service';
+import { TokenMiddleware } from './common/middlewares/token.middleware';
 
 @Module({
   imports: [
@@ -33,10 +19,29 @@ import { ObrasEmpreendimentosModule } from './obras-empreendimentos/obras-empree
     
     // Lista de todos os módulos ativos no sistema
     FiliaisModule,
-    UsuariosModule, 
-    AprovaçoesModule,
+    UsuariosModule,
     NotasFiscaisModule,
-    ObrasEmpreendimentosModule,
+    AprovaçoesModule,
+    ObrasEmpreendimentosModule, // Removi a duplicata do FiliaisModule que estava aqui embaixo
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  constructor(private readonly loginService: LoginService) {}
+
+  configure(consumer: MiddlewareConsumer) {
+    // Criamos a instância do middleware passando o serviço de login
+    const tokenMiddleware = new TokenMiddleware(this.loginService);
+
+    consumer
+      .apply(tokenMiddleware.verificarAcesso)
+      .exclude(
+        { path: 'usuarios/login', method: RequestMethod.POST }, // Não pede token no login
+        { path: 'usuarios', method: RequestMethod.POST }        // Não pede token no cadastro (opcional)
+      )
+      .forRoutes(
+        'usuarios', // Protege todas as outras rotas de usuários (Get, Put, Delete)
+        'NOTAS',    // Protege as rotas de Notas Fiscais
+        'OBRAS'     // Protege as rotas de Obras
+      );
+  }
+}

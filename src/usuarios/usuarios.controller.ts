@@ -1,41 +1,80 @@
-//usuario.controller.ts
-
-import { Controller, Get, Post, Body, Put, Delete, Param } from '@nestjs/common';
+// src/usuarios/usuarios.controller.ts
+import { Controller, Get, Post, Delete, Body, Put, Param, Res, HttpStatus } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { Usuarios } from './entities/usuario.entity';
+import { LoginService } from './login.service';
+import * as express from 'express';
+// Adicione o ApiBearerAuth na importação abaixo:
+import { ApiBody, ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('usuarios') // Organiza no Swagger sob a aba 'usuarios'
+@ApiBearerAuth('token-acesso') // <--- ISSO ativa o cadeado no Swagger para este controller
 @Controller('usuarios')
 export class UsuariosController {
   
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(
+    private readonly usuariosService: UsuariosService,
+    private readonly loginService: LoginService 
+  ) {}
+
+  @Post('login')
+  @ApiOperation({ summary: 'Realizar login do usuário' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'ivan@teste.com' },
+        senha: { type: 'string', example: '123456' }
+      },
+      required: ['email', 'senha']
+    }
+  })
+  async login(@Body() body: any, @Res() res: express.Response) {
+    try {
+      const { email, senha } = body;
+      const token = await this.loginService.verificarLogin(email, senha);
+      
+      return res.status(HttpStatus.OK).json({
+        auth: true,
+        token: token
+      });
+    } catch (err: any) {
+      if (err.id && err.msg) {
+        return res.status(err.id).json({ erro: err.msg });
+      }
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        erro: err.message || 'Erro interno no servidor'
+      });
+    }
+  }
 
   @Post()
+  @ApiOperation({ summary: 'Criar novo usuário' })
   async criar(@Body() usuario: Usuarios): Promise<Usuarios> {
-    // Chama o método 'inserir' do seu Service
     return await this.usuariosService.inserir(usuario);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Listar todos os usuários (Requer Token)' })
   async buscarTodos(): Promise<Usuarios[]> {
-    // Chama o método 'listar' do seu Service[cite: 5]
     return await this.usuariosService.listar();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Buscar usuário por ID (Requer Token)' })
   async buscarUm(@Param('id') id: number): Promise<Usuarios> {
-    // Chama o método 'buscarPorId' do seu Service[cite: 5]
     return await this.usuariosService.buscarPorId(id);
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Atualizar usuário (Requer Token)' })
   async atualizar(@Param('id') id: number, @Body() usuario: Usuarios): Promise<void> {
-    // Chama o método 'alterar' do seu Service[cite: 5]
     await this.usuariosService.alterar(id, usuario);
   }
 
   @Delete(':id')
-  async remover(@Param('id') id: number): Promise<void> {
-    // Chama o método 'excluir' do seu Service[cite: 5]
-    await this.usuariosService.excluir(id);
+  @ApiOperation({ summary: 'Excluir usuário (Requer Token)' })
+  async deletar(@Param('id') id: number): Promise<void>{
+    return await this.usuariosService.excluir(id);
   }
 }

@@ -1,26 +1,48 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFiliaiDto } from './dto/create-filiai.dto';
-import { UpdateFiliaiDto } from './dto/update-filiai.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Filiais } from './entities/filiais.entity';
 
 @Injectable()
 export class FiliaisService {
-  create(createFiliaiDto: CreateFiliaiDto) {
-    return 'This action adds a new filiai';
+  constructor(
+    @InjectRepository(Filiais)
+    private readonly repository: Repository<Filiais>,
+  ) {}
+
+  async inserir(dados: Filiais): Promise<Filiais> {
+    return await this.repository.save(dados);
   }
 
-  findAll() {
-    return `This action returns all filiais`;
+  async listar(): Promise<Filiais[]> {
+    return await this.repository.find({
+      relations: ['obras', 'usuarios'], // Traz os vínculos da filial[cite: 9]
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} filiai`;
+  async buscarPorId(id: string): Promise<Filiais> {
+    const filial = await this.repository.findOne({
+      where: { id: id as any },
+      relations: ['obras', 'usuarios'],
+    });
+
+    if (!filial) {
+      throw new NotFoundException(`Filial com ID ${id} não encontrada`);
+    }
+    return filial;
   }
 
-  update(id: number, updateFiliaiDto: UpdateFiliaiDto) {
-    return `This action updates a #${id} filiai`;
+  async alterar(id: string, dados: Partial<Filiais>): Promise<void> {
+    const existe = await this.buscarPorId(id);
+    if (existe) {
+      await this.repository.update(id, dados);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} filiai`;
+  async excluir(id: string): Promise<void> {
+    const existe = await this.buscarPorId(id);
+    if (existe) {
+      await this.repository.delete(id);
+    }
   }
 }
