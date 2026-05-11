@@ -3,6 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn,OneToMany, ManyToOne, } from "ty
 import { Filiais } from "../../filiais/entities/filiais.entity";
 import { APROVACOES } from "../../aprovaçoes/entities/aprovaçoe.entity";
 import { ApiProperty } from '@nestjs/swagger';
+import { Perfil } from "../../perfil/entities/perfil.entity";
 
 @Entity()
 export class Usuarios{
@@ -21,9 +22,10 @@ export class Usuarios{
     @ApiProperty({ description: 'Senha do usuário' })
     senha?: string;
     
-    @Column()
-    @ApiProperty({ example: '1 2 3'})
-    perfil?: string
+    // Mudança aqui: Relacionamento com a nova tabela
+    @ManyToOne(() => Perfil, (perfil) => perfil.usuarios)
+    @ApiProperty({ type: () => Perfil })
+    perfil?: Perfil;
 
     
     @ManyToOne(() => Filiais, (filial) => filial.usuarios)
