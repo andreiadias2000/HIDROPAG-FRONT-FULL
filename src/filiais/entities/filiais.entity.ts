@@ -9,11 +9,11 @@ export class Filiais {
     @PrimaryGeneratedColumn("uuid")
     id?: string;
 
-    @Column()
+    @Column({nullable: false, unique: true}) //nao pode nulo e duplicado
     @ApiProperty({ example: 'Filial Porto Alegre', description: 'Nome da unidade' })
     nome?: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: false })
     @ApiProperty({ example: 'Porto Alegre', description: 'Cidade onde a filial está alocada' })
     cidade?: string;
     
