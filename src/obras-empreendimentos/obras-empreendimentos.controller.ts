@@ -49,6 +49,7 @@ export class ObrasEmpreendimentosController {
     @Param('id', ParseUUIDPipe) id: string, 
     @Body() dados: any 
   ) {
+    // CORREÇÃO: Usando 'this.service' que é o nome real injetado no seu construtor
     return await this.service.alterar(id, dados);
   }
 
