@@ -10,6 +10,10 @@ export class Notas {
     @PrimaryGeneratedColumn('uuid')
     id?: string;
 
+    @Column({ default: false }) // Por padrão, nasce sem anexo
+    @ApiProperty({ example: true, description: 'Indica se a nota possui um PDF anexado' })
+    tem_anexo?: boolean;
+
     @Column()
     @ApiProperty({ example: 1010 })
     numero_nf?: number;

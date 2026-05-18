@@ -1,120 +1,118 @@
-//notas-fiscais.controler.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, Res, StreamableFile, Put, UseGuards } from '@nestjs/common';
+// notas-fiscais.controller.ts
+import { 
+  Controller, Get, Post, Body, Param, Delete, UseInterceptors, 
+  UploadedFile, BadRequestException, Res, StreamableFile, Put, UseGuards 
+} from '@nestjs/common';
 import { NotasFiscaisService } from './notas-fiscais.service';
-import { Notas } from './entities/notas-fiscais.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { RolesGuard } from '../common/guards/roles.guard';
 
-@ApiTags('NOTAS') // Organiza no Swagger
+// 1. IMPORTAÇÃO DOS DTOS
+import { CreateNotasFiscaiDto } from './dto/create-notas-fiscai.dto';
+import { UpdateNotasFiscaiDto } from './dto/update-notas-fiscai.dto';
+
+@ApiTags('NOTAS') 
 @ApiBearerAuth('token-acesso')
 @Controller('NOTAS')
-@UseGuards(RolesGuard) // <--- ISSO PROTEGE O CONTROLLER INTEIRO!
+@UseGuards(RolesGuard) 
 export class NotasFiscaisController {
   
   constructor(private readonly notasFiscaisService: NotasFiscaisService) {}
 
   @Post()
   @ApiOperation({ summary: 'Lança uma nova nota fiscal com arquivo PDF' })
-  @ApiConsumes('multipart/form-data') // CRÍTICO: Avisa que aceita arquivos
+  @ApiConsumes('multipart/form-data') 
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        file: { type: 'string', format: 'binary' }, // Cria o botão de upload no Swagger
-        numero_nf: { type: 'integer' },
+        file: { type: 'string', format: 'binary' },
+        numero_nf: { type: 'number' },
         fornecedor: { type: 'string' },
         data_vencimento: { type: 'string', format: 'date' },
         valor_total: { type: 'number' },
-        quant_parcelas: { type: 'integer' },
-        status: { type: 'integer' },
+        quant_parcelas: { type: 'number' },
+        status: { type: 'number' },
+        obra: { type: 'string', description: 'Apenas cole o ID da Obra aqui' }
       },
     },
   })
   @UseInterceptors(FileInterceptor('file')) 
   async criar(
-    @Body() dados: Notas,
+    @Body() dados: CreateNotasFiscaiDto, 
     @UploadedFile() file: Express.Multer.File
   ) {
     
-    console.log('Arquivo recebido:', file);
-    console.log('Dados recebidos:', dados);
+    // Empacotamos o ID em um objeto para o TypeORM entender
+    const notaParaSalvar: any = { 
+      ...dados,
+      obra: { id: dados.obra } 
+    };
     
     if (file) {
-      // Atribui o buffer do arquivo PDF à entidade antes de salvar
-      dados.arquivoPdf = file.buffer; 
+      notaParaSalvar.arquivoPdf = file.buffer; 
+      notaParaSalvar.tem_anexo = true; // Bandeirinha levantada!
+    } else {
+      notaParaSalvar.tem_anexo = false;
     }
     
-    return await this.notasFiscaisService.inserir(dados);
-  }
-@Get(':id/download')
-@ApiOperation({ summary: 'Baixa o PDF da nota fiscal' })
-async baixarPdf(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
-  const nota = await this.notasFiscaisService.buscarPorId(id);
-
-  if (!nota || !nota.arquivoPdf) {
-    throw new BadRequestException('Nota não encontrada ou não possui PDF anexado.');
+    return await this.notasFiscaisService.inserir(notaParaSalvar);
   }
 
-  // Define o cabeçalho para o navegador entender que é um PDF
-  res.set({
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename="nota_${nota.numero_nf}.pdf"`,
-  });
+  @Get(':id/download')
+  @ApiOperation({ summary: 'Baixa o PDF da nota fiscal' })
+  async baixarPdf(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    
+    // 💡 MUDANÇA AQUI: Agora usamos o método que traz o PDF junto da base de dados!
+    const nota = await this.notasFiscaisService.buscarNotaComPdf(id);
 
-  // Retorna o Buffer como um arquivo baixável
-  return new StreamableFile(nota.arquivoPdf);
-}
+    if (!nota || !nota.arquivoPdf) {
+      throw new BadRequestException('Nota não encontrada ou não possui PDF anexado.');
+    }
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="nota_${nota.numero_nf}.pdf"`,
+    });
+
+    return new StreamableFile(nota.arquivoPdf);
+  }
 
   @Get()
+  @ApiOperation({ summary: 'Lista as notas fiscais (Rápido, sem trazer o PDF)' })
   async buscarTodas() {
     return await this.notasFiscaisService.listar();
   }
 
-  // Recebe o ID como string
   @Get(':id')
+  @ApiOperation({ summary: 'Detalhes de uma nota fiscal (Rápido, sem trazer o PDF)' })
   async buscarUma(@Param('id') id: string) {
     return await this.notasFiscaisService.buscarPorId(id);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar nota fiscal (Requer Token)' })
-  @UseGuards(RolesGuard) // Bloqueia o perfil 'leitor' de fazer alterações
-  @ApiBody({
-    description: 'Campos para atualização da Nota Fiscal (Envie apenas o que deseja alterar)',
-    schema: {
-      type: 'object',
-      example: {
-        numero: '123456',
-        valor: 1500.85,
-        dataEmissao: '2026-05-17',
-        descricao: 'Prestação de serviços de manutenção hidropag',
-        quantidadeParcelas: 3,        // <-- Novo campo adicionado
-        status: 'Pendente'            // <-- Novo campo adicionado (ex: 'Pendente', 'Aprovado', 'Pago')
-      }
-    }
-  })
+  @UseGuards(RolesGuard) 
   async atualizar(
     @Param('id') id: string, 
-    @Body() nota: any // Mudamos para any para casar com o mapeamento estático do Swagger
+    @Body() nota: UpdateNotasFiscaiDto 
   ) {
-    return await this.notasFiscaisService.alterar(id, nota);
+    return await this.notasFiscaisService.alterar(id, nota as any);
   }
+
   @Put(':id/upload-pdf')
   @ApiOperation({ summary: 'Substituir o arquivo PDF da nota fiscal (Requer Token)' })
-  @UseGuards(RolesGuard) // Bloqueia o perfil 'leitor'
-  @ApiConsumes('multipart/form-data') // Altera o tipo de conteúdo no Swagger para aceitar arquivo
-  @UseInterceptors(FileInterceptor('file')) // Intercepta o campo 'file' enviado
+  @UseGuards(RolesGuard) 
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   @ApiBody({
     description: 'Selecione o novo arquivo PDF da nota fiscal',
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary', // Faz o Swagger exibir o botão de "Escolher arquivo"
-        },
+        file: { type: 'string', format: 'binary' },
       },
     },
   })
@@ -122,12 +120,20 @@ async baixarPdf(@Param('id') id: string, @Res({ passthrough: true }) res: Respon
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    // Aqui você chama o seu serviço repassando o ID da nota e o buffer do arquivo (file.buffer)
-    // Exemplo: return await this.notasFiscaisService.salvarPdf(id, file);
+    
+    if (!file) {
+      throw new BadRequestException('Nenhum arquivo enviado.');
+    }
+
+    // 💡 MUDANÇA AQUI: Agora ele salva o novo arquivo e levanta a bandeira caso a nota não tivesse anexo
+    await this.notasFiscaisService.alterar(id, {
+      arquivoPdf: file.buffer,
+      tem_anexo: true
+    } as any);
+
     return { msg: 'Arquivo PDF atualizado com sucesso!', nomeArquivo: file.originalname };
   }
 
-  // Recebe o ID como string
   @Delete(':id')
   async remover(@Param('id') id: string) {
     return await this.notasFiscaisService.excluir(id);

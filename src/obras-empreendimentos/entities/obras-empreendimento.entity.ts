@@ -5,6 +5,7 @@ import { Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColum
 import { Filiais } from "../../filiais/entities/filiais.entity";
 import { Notas } from "../../notas-fiscais/entities/notas-fiscais.entity";
 import { ApiProperty } from "@nestjs/swagger";
+import { Exclude } from "class-transformer";
 
 @Entity('OBRAS')
 export class Obras {
@@ -28,6 +29,7 @@ export class Obras {
   @ApiProperty({ type: () => Filiais, description: 'Filial a qual a obra pertence' })
   filial!: Filiais; // Removi o '?' pois agora é obrigatório
 
+  @Exclude()
   @OneToMany(() => Notas, (nota) => nota.obra)
   notas?: Notas[];
 }
