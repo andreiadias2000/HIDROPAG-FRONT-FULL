@@ -39,3 +39,11 @@ npm install class-validator class-transformer
 add teste unitario, no usuario.espec e usuarios.e2e-spec pasta ts.
 npm run test -- usuarios
 npm run test:e2e -- usuarios
+
+
+usei pra fazer a nova pasta do front no terminal
+
+→ npm create vite@latest frontend -- --template react 
+
+biblioteca instalada precisa
+→ npm install axios 
