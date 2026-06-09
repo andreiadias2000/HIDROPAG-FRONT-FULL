@@ -5,71 +5,69 @@ import axios from 'axios';
 function FiliaisList() {
   const [filiais, setFiliais] = useState([]);
 
-  // 1. COLOQUE O SEU TOKEN AQUI (Mantenha as aspas!)
-  const meuToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibm9tZSI6IkFkbWluaXN0cmFkb3IgUm9vdCIsImVtYWlsIjoiYWRtaW5AaGlkcm9wYWcuY29tIiwicGVyZmlsIjp7ImlkIjoiMzU0ZWEzYWUtMjU4NC00MGRjLTk0ZGYtZmIyZDNjNzFmMTA1Iiwibm9tZSI6InJvb3QifSwiaWF0IjoxNzgwOTczMDYyLCJleHAiOjE3ODA5NzY2NjJ9.62HI-7JWbNNTd7ijOj-Sb_k7MXuhUXO9p8XyTZLx1d0"; 
-  
-  // 2. Esta é a "chave" que vamos mostrar para o back-end deixar o React entrar
-  const config = {
-    headers: { Authorization: `Bearer ${meuToken}` }
-  };
-
   // Função para buscar as filiais da API
   const buscarFiliais = () => {
-    // Passamos a "config" com o token aqui
-    axios.get('http://localhost:3000/filiais', config)
-      .then((resposta) => {
-        setFiliais(resposta.data);
-      })
-      .catch((erro) => {
-        console.error("Erro ao buscar as filiais:", erro);
-        if (erro.response && erro.response.status === 401) {
-          alert("Acesso Negado! O token está inválido ou expirou.");
-        }
-      });
+    // Buscamos o token no cofre na hora que a função é chamada
+    const tokenSalvo = localStorage.getItem('tokenHidropag');
+
+    if (!tokenSalvo) {
+      alert("Você não está logado! Faça o login.");
+      return;
+    }
+
+    axios.get('http://localhost:3000/filiais', {
+      headers: { Authorization: `Bearer ${tokenSalvo}` }
+    })
+    .then((resposta) => {
+      setFiliais(resposta.data);
+    })
+    .catch((erro) => {
+      console.error("Erro na requisição:", erro);
+      alert("Erro ao buscar: " + erro.message);
+    });
   };
 
-  // Busca as filiais assim que a tela abre
+  // Isso faz a busca acontecer automaticamente quando a tela abre
   useEffect(() => {
     buscarFiliais();
   }, []);
 
-  // FUNÇÃO PARA DELETAR (O "D" do CRUD)
+  // FUNÇÃO PARA DELETAR
   const deletarFilial = (id, nome) => {
+    const tokenSalvo = localStorage.getItem('tokenHidropag');
     if (window.confirm(`Tem certeza que deseja excluir a filial "${nome}"?`)) {
-      // Passamos a "config" com o token aqui também
-      axios.delete(`http://localhost:3000/filiais/${id}`, config)
-        .then(() => {
-          alert("Filial excluída com sucesso!");
-          buscarFiliais(); // Atualiza a lista na tela após deletar
-        })
-        .catch((erro) => {
-          console.error("Erro ao deletar:", erro);
-          alert("Erro ao deletar a filial.");
-        });
+      axios.delete(`http://localhost:3000/filiais/${id}`, {
+        headers: { Authorization: `Bearer ${tokenSalvo}` }
+      })
+      .then(() => {
+        alert("Filial excluída com sucesso!");
+        buscarFiliais();
+      })
+      .catch((erro) => {
+        console.error("Erro ao deletar:", erro);
+        alert("Erro ao deletar a filial.");
+      });
     }
   };
 
-  // FUNÇÃO PARA EDITAR (O "U" do CRUD - Update)
+  // FUNÇÃO PARA EDITAR
   const editarFilial = (id) => {
+    const tokenSalvo = localStorage.getItem('tokenHidropag');
     const novoNome = window.prompt("Digite o novo nome para esta filial:");
     
-    // Validação para não aceitar nome em branco
-    if (novoNome === null) return; // Se clicou em cancelar
-    if (!novoNome.trim()) {
-      alert("O nome da filial não pode ser vazio!");
-      return;
-    }
+    if (!novoNome) return; 
 
-    // Passamos a "config" com o token como terceiro parâmetro aqui
-    axios.put(`http://localhost:3000/filiais/${id}`, { nome: novoNome }, config)
-      .then(() => {
-        alert("Filial atualizada com sucesso!");
-        buscarFiliais(); // Atualiza a lista na tela
-      })
-      .catch((erro) => {
-        console.error("Erro ao atualizar:", erro);
-        alert("Erro ao atualizar a filial.");
-      });
+    axios.put(`http://localhost:3000/filiais/${id}`, { nome: novoNome }, {
+      headers: { Authorization: `Bearer ${tokenSalvo}` }
+    })
+    .then(() => {
+      alert("Filial atualizada com sucesso!");
+      buscarFiliais();
+    })
+    .catch((erro) => {
+      console.error("Erro ao atualizar:", erro);
+      alert("Erro ao atualizar a filial.");
+    });
   };
 
   return (
@@ -95,13 +93,13 @@ function FiliaisList() {
                 <td style={{ padding: '12px', textAlign: 'center' }}>
                   <button 
                     onClick={() => editarFilial(filial.id)}
-                    style={{ backgroundColor: '#ffc107', color: 'black', border: 'none', padding: '6px 12px', marginRight: '10px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }}
+                    style={{ backgroundColor: '#ffc107', padding: '6px 12px', marginRight: '10px', cursor: 'pointer', borderRadius: '4px' }}
                   >
                     Editar
                   </button>
                   <button 
                     onClick={() => deletarFilial(filial.id, filial.nome)}
-                    style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '6px 12px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }}
+                    style={{ backgroundColor: '#dc3545', color: 'white', padding: '6px 12px', cursor: 'pointer', borderRadius: '4px' }}
                   >
                     Excluir
                   </button>
@@ -116,8 +114,6 @@ function FiliaisList() {
 }
 
 export default FiliaisList;
-
-
 
 // import { useState, useEffect } from 'react';
 // import axios from 'axios';

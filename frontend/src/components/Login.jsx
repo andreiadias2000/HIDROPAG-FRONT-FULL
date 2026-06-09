@@ -15,26 +15,30 @@ function Login() {
       return;
     }
 
-    // Enviando os dados para a sua rota do usuarios.controller.ts
     axios.post('http://localhost:3000/usuarios/login', { 
       email: email, 
       senha: senha 
     })
       .then((resposta) => {
-        // O seu back-end devolve um objeto com { auth: true, token: "..." }
+        // A variável correta agora é tokenRecebido
         const tokenRecebido = resposta.data.token;
         
-        // GUARDANDO O TOKEN NO COFRE DO NAVEGADOR
+        // Guardando no cofre do navegador
         localStorage.setItem('tokenHidropag', tokenRecebido);
         
         alert("Login realizado com sucesso!");
-        navigate('/filiais'); // Redireciona para a tela de filiais
+        navigate('/filiais'); 
       })
       .catch((erro) => {
-        console.error("Erro no login:", erro);
-        alert("E-mail ou senha incorretos! (Ou usuário sem permissão)");
+        console.error("🔍 Erro ao logar:", erro.response);
+        
+        if (erro.response && erro.response.data && erro.response.data.erro) {
+          alert("Erro do Servidor: " + erro.response.data.erro);
+        } else {
+          alert("E-mail ou senha incorretos!");
+        }
       });
-  };
+  }; // <--- Aqui fechamos a função handleLogin corretamente
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
