@@ -1,14 +1,16 @@
-//src/main.ts
+// src/main.ts
 
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-
-import { ValidationPipe } from '@nestjs/common'; // adicionei esta linha
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // CORREÇÃO: Linha adicionada para permitir que o React acesse a API
+  app.enableCors(); 
+
   // Ela obriga a API a validar os dados de entrada usando os DTOs.
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,          // Remove campos enviados que não estão no DTO
